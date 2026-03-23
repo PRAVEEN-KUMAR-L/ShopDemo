@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShopDemo — Profile Import / Export</title>
+    <style>
+        /* ── Reset & base ──────────────────────────────────────────────────── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --border: #2a2d3a;
+            --accent: #6c63ff;
+            --accent2: #00d4aa;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --text: #e2e8f0;
+            --muted: #64748b;
+            --success: #22c55e;
+            --radius: 10px;
+            --font: 'DM Mono', 'Fira Code', monospace;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 13px;
+            min-height: 100vh;
+            padding: 0 0 60px;
+        }
+
+        /* ── Header ────────────────────────────────────────────────────────── */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 18px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-logo {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #fff;
+        }
+
+        .header-logo span {
+            color: var(--accent);
+        }
+
+        .header-badge {
+            font-size: 10px;
+            background: var(--accent);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 99px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* ── Layout ────────────────────────────────────────────────────────── */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 720px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── Cards ─────────────────────────────────────────────────────────── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .icon-export {
+            background: rgba(0, 212, 170, .15);
+        }
+
+        .icon-import {
+            background: rgba(108, 99, 255, .15);
+        }
+
+        .icon-config {
+            background: rgba(245, 158, 11, .15);
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .card-subtitle {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* ── Form elements ─────────────────────────────────────────────────── */
+        label {
+            display: block;
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        input[type=text],
+        input[type=file],
+        select,
+        textarea {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            padding: 8px 12px;
+            font-family: var(--font);
+            font-size: 12px;
+            outline: none;
+            transition: border-color .15s;
+        }
+
+        input[type=text]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--accent);
+        }
+
+        input[type=file] {
+            padding: 6px;
+            cursor: pointer;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 110px;
+        }
+
+        .form-row {
+            margin-bottom: 14px;
+        }
+
+        .form-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .checkbox-row input[type=checkbox] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+
+        .checkbox-row label {
+            margin: 0;
+            color: var(--text);
+            font-size: 12px;
+        }
+
+        /* ── Buttons ────────────────────────────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
+            border-radius: 7px;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font);
+            font-size: 12px;
+            font-weight: 600;
+            transition: opacity .15s, transform .1s;
+        }
+
+        .btn:active {
+            transform: scale(.97);
+        }
+
+        .btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-success {
+            background: var(--accent2);
+            color: #0f1117;
+        }
+
+        .btn-warn {
+            background: var(--warn);
+            color: #0f1117;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-ghost {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        .btn-full {
+            width: 100%;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        /* ── Status / results ─────────────────────────────────────────────── */
+        .result-box {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .result-box.visible {
+            display: block;
+        }
+
+        .result-success {
+            background: rgba(34, 197, 94, .1);
+            border: 1px solid rgba(34, 197, 94, .3);
+            color: var(--success);
+        }
+
+        .result-error {
+            background: rgba(239, 68, 68, .1);
+            border: 1px solid rgba(239, 68, 68, .3);
+            color: var(--danger);
+        }
+
+        .result-info {
+            background: rgba(108, 99, 255, .1);
+            border: 1px solid rgba(108, 99, 255, .3);
+            color: #a5b4fc;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .stat-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        /* ── Spinner ────────────────────────────────────────────────────────── */
+        .spinner {
+            display: inline-block;
+            width: 13px;
+            height: 13px;
+            border: 2px solid rgba(255, 255, 255, .3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Divider ────────────────────────────────────────────────────────── */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 20px 0;
+        }
+
+        /* ── Section title ──────────────────────────────────────────────────── */
+        .section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--muted);
+            margin-bottom: 16px;
+            margin-top: 32px;
+        }
+
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
+        /* ── Tag ────────────────────────────────────────────────────────────── */
+        .tag {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .tag-blue {
+            background: rgba(108, 99, 255, .2);
+            color: #a5b4fc;
+        }
+
+        .tag-green {
+            background: rgba(34, 197, 94, .2);
+            color: var(--success);
+        }
+
+        .tag-orange {
+            background: rgba(245, 158, 11, .2);
+            color: var(--warn);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="header-logo">Shop<span>Demo</span></div>
+        <div class="header-badge">Admin</div>
+        <div style="margin-left:auto; color: var(--muted); font-size:12px;">
+            Profile Import &amp; Export — Apache Unomi CDP
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- ═══════════ EXPORT SECTION ═══════════════════════════════════════════ -->
+        <p class="section-title">Export existing profiles from Elasticsearch</p>
+
+        <div class="grid-2">
+
+            <!-- Quick CSV Export -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-export">📤</div>
+                    <div>
+                        <div class="card-title">Export Profiles to CSV</div>
+                        <div class="card-subtitle">Reads all profiles currently stored in Elasticsearch</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <label>Segment filter <span class="tag tag-blue">optional</span></label>
+                        <select id="export-segment" onchange="syncSegmentToConfig(this.value)">
+                            <option value="">All profiles</option>
+                            <option value="high-value-customer">High Value Customer</option>
+                            <option value="returning-visitor">Returning Visitor</option>
+                            <option value="north-indian-lover">North Indian Lover</option>
+                            <option value="south-indian-lover">South Indian Lover</option>
+                            <option value="chinese-food-lover">Chinese Food Lover</option>
+                            <option value="italian-food-lover">Italian Food Lover</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label>Fields to include <span class="tag tag-blue">comma-separated</span></label>
+                        <input type="text" id="export-fields"
+                            value="email,firstName,userId,loggedInAs,interestedInNorthIndian,interestedInSouthIndian,interestedInChinese,interestedInItalian,pageViewCount,totalCartAdds,totalPurchases" />
+                    </div>
+                    <button class="btn btn-success btn-full" onclick="doExportCSV()">
+                        <span>⬇</span> Download CSV
+                    </button>
+                    <div id="export-result" class="result-box"></div>
+                </div>
+            </div>
+
+            <!-- Export Config (Recurrent) -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-config">⚙️</div>
+                    <div>
+                        <div class="card-title">Recurrent Export Config</div>
+                        <div class="card-subtitle">Camel-backed — writes CSV to SFTP / local file on schedule</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <label>Config JSON</label>
+                        <textarea id="export-config-json">{
+  "itemId": "shopExportRecurrent",
+  "itemType": "exportConfig",
+  "name": "ShopDemo Recurring Export",
+  "configType": "recurrent",
+  "columnSeparator": ",",
+  "lineSeparator": "\\n",
+  "active": true,
+  "properties": {
+    "destination": "file:///tmp/shopdemo_export/?fileName=profiles-${date:now:yyyyMMddHHmm}.csv",
+    "segment": "high-value-customer",
+    "period": "5m",
+    "mapping": { "0":"email","1":"firstName","2":"totalPurchases","3":"totalCartAdds" }
+  }
+}</textarea>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn btn-warn" style="flex:1" onclick="saveExportConfig()">Save Config</button>
+                        <button class="btn btn-ghost" onclick="listExportConfigs()">List Configs</button>
+                    </div>
+                    <div id="export-config-result" class="result-box"></div>
+                </div>
+            </div>
+
+        </div><!-- /grid -->
+
+
+        <!-- ═══════════ IMPORT SECTION ═══════════════════════════════════════════ -->
+        <p class="section-title" style="margin-top:40px">Import profiles — merges with existing data</p>
+
+        <div class="grid-2">
+
+            <!-- CSV Upload + Merge -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-import">📥</div>
+                    <div>
+                        <div class="card-title">Import &amp; Merge CSV</div>
+                        <div class="card-subtitle">Matches by email — sums counters, OR-s interests, keeps history</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <label>CSV file <span class="tag tag-blue">required</span></label>
+                        <input type="file" id="import-file" accept=".csv,text/csv" />
+                    </div>
+                    <div class="form-row">
+                        <label>Merging property (unique key column in your CSV)</label>
+                        <input type="text" id="import-merge-key" value="email" />
+                    </div>
+                    <div class="checkbox-row">
+                        <input type="checkbox" id="import-overwrite" checked />
+                        <label for="import-overwrite">Overwrite scalar fields (email, name, userId) with CSV
+                            values</label>
+                    </div>
+                    <button class="btn btn-primary btn-full" id="import-btn" onclick="doImportCSV()">
+                        <span>⬆</span> Upload &amp; Merge
+                    </button>
+
+                    <div id="import-result" class="result-box"></div>
+
+                    <div id="import-stats" style="display:none">
+                        <div class="divider"></div>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-num" id="stat-imported">0</div>
+                                <div class="stat-label">Created</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-num" id="stat-merged">0</div>
+                                <div class="stat-label">Merged</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-num" id="stat-errors">0</div>
+                                <div class="stat-label">Errors</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import Config (Recurrent) -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon icon-config">⚙️</div>
+                    <div>
+                        <div class="card-title">Recurrent Import Config</div>
+                        <div class="card-subtitle">Camel-backed — polls a folder / SFTP path for new CSV files</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <label>Config JSON</label>
+                        <textarea id="import-config-json">{
+  "itemId": "shopImportRecurrent",
+  "itemType": "importConfig",
+  "name": "ShopDemo Recurring Import",
+  "configType": "recurrent",
+  "columnSeparator": ",",
+  "lineSeparator": "\\n",
+  "hasHeader": true,
+  "hasDeleteColumn": false,
+  "mergingProperty": "email",
+  "overwriteExistingProfiles": true,
+  "active": true,
+  "properties": {
+    "source": "file:///tmp/shopdemo_import/?include=.*.csv&move=.done&consumer.delay=30s",
+    "mapping": { "email":0,"firstName":1,"userId":2,"totalPurchases":3 }
+  }
+}</textarea>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn btn-warn" style="flex:1" onclick="saveImportConfig()">Save Config</button>
+                        <button class="btn btn-ghost" onclick="listImportConfigs()">List Configs</button>
+                    </div>
+                    <div id="import-config-result" class="result-box"></div>
+                </div>
+            </div>
+
+        </div><!-- /grid -->
+
+        <!-- CSV Format reference -->
+        <div class="card" style="margin-top:24px">
+            <div class="card-header">
+                <div class="card-icon" style="background:rgba(100,116,139,.15)">📋</div>
+                <div>
+                    <div class="card-title">Expected CSV Format</div>
+                    <div class="card-subtitle">Column order matters only for Unomi recurrent configs; header names
+                        matter for the merge import above</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <pre
+                    style="background:var(--bg);padding:14px;border-radius:8px;border:1px solid var(--border);overflow:auto;font-size:11px;color:#94a3b8">email,firstName,userId,interestedInNorthIndian,interestedInSouthIndian,interestedInChinese,interestedInItalian,pageViewCount,totalCartAdds,totalPurchases
+alice@demo.com,Alice Johnson,user-alice-001,true,false,false,false,12,5,2
+bob@demo.com,Bob Smith,user-bob-002,false,true,false,false,3,1,0
+carol@demo.com,Carol White,user-carol-003,false,false,true,true,27,14,6</pre>
+                <p style="margin-top:12px; color:var(--muted); font-size:11px; line-height:1.7">
+                    <strong style="color:var(--text)">Merge behaviour on re-import:</strong>
+                    <code style="color:var(--accent2)">pageViewCount</code>,
+                    <code style="color:var(--accent2)">totalCartAdds</code>,
+                    <code style="color:var(--accent2)">totalPurchases</code> are <em>summed</em> with existing values.
+                    Interest flags are <em>OR-ed</em> (never reset to false once set true).
+                    Identity fields (<code style="color:var(--accent2)">email</code>, <code
+                        style="color:var(--accent2)">firstName</code>, <code style="color:var(--accent2)">userId</code>)
+                    follow the overwrite checkbox.
+                </p>
+            </div>
+        </div>
+
+    </div><!-- /container -->
+
+    <script>
+        // ── Sync segment dropdown → Recurrent Export Config JSON ─────────────────────
+        function syncSegmentToConfig(selectedSegment) {
+            const textarea = document.getElementById("export-config-json");
+            try {
+                const config = JSON.parse(textarea.value);
+
+                if (selectedSegment === "") {
+                    // "All profiles" selected — remove segment key entirely
+                    delete config.properties.segment;
+                } else {
+                    // Set segment to the selected value
+                    config.properties.segment = selectedSegment;
+                }
+
+                // Write back to textarea with clean formatting
+                textarea.value = JSON.stringify(config, null, 2);
+
+                // Flash border green briefly to confirm it updated
+                textarea.style.borderColor = "var(--accent2)";
+                setTimeout(() => { textarea.style.borderColor = ""; }, 1000);
+
+            } catch (e) {
+                console.warn("[syncSegmentToConfig] Could not parse config JSON:", e.message);
+            }
+        }
+        // ── Export CSV ────────────────────────────────────────────────────────────────
+        async function doExportCSV() {
+            const segment = document.getElementById("export-segment").value;
+            const fields = document.getElementById("export-fields").value.trim();
+            const box = document.getElementById("export-result");
+
+            showResult(box, "info", "⏳ Fetching profiles from Elasticsearch…");
+
+            try {
+                let url = "/api/export/profiles/csv";
+                const params = [];
+                if (segment) params.push("segment=" + encodeURIComponent(segment));
+                if (fields) params.push("fields=" + encodeURIComponent(fields));
+                if (params.length) url += "?" + params.join("&");
+
+                const res = await fetch(url);
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({ error: res.statusText }));
+                    return showResult(box, "error", "❌ " + (err.error || res.statusText));
+                }
+
+                const blob = await res.blob();
+                const disp = res.headers.get("Content-Disposition") || "";
+                const match = disp.match(/filename="([^"]+)"/);
+                const filename = match ? match[1] : "profiles.csv";
+
+                // Trigger browser download
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                link.click();
+                URL.revokeObjectURL(link.href);
+
+                showResult(box, "success", `✅ Downloaded ${filename}`);
+            } catch (e) {
+                showResult(box, "error", "❌ Network error: " + e.message);
+            }
+        }
+
+        // ── Import CSV with merge ─────────────────────────────────────────────────────
+        async function doImportCSV() {
+            const file = document.getElementById("import-file").files[0];
+            const mergeKey = document.getElementById("import-merge-key").value.trim() || "email";
+            const overwrite = document.getElementById("import-overwrite").checked;
+            const box = document.getElementById("import-result");
+            const statsEl = document.getElementById("import-stats");
+            const btn = document.getElementById("import-btn");
+
+            if (!file) return showResult(box, "error", "❌ Please select a CSV file first.");
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Importing…';
+            statsEl.style.display = "none";
+            showResult(box, "info", "⏳ Uploading and merging with existing Elasticsearch profiles…");
+
+            try {
+                const form = new FormData();
+                form.append("csvFile", file);
+                form.append("mergingProperty", mergeKey);
+                form.append("overwrite", String(overwrite));
+
+                const res = await fetch("/api/import/profiles/csv", { method: "POST", body: form });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showResult(box, "error", "❌ " + (data.error || res.statusText));
+                } else {
+                    const errSummary = data.errors && data.errors.length
+                        ? `  |  ${data.errors.length} error(s)`
+                        : "";
+                    showResult(box, "success",
+                        `✅ Done — ${data.imported} created, ${data.merged} merged, ${data.skipped} skipped${errSummary}`);
+
+                    document.getElementById("stat-imported").textContent = data.imported;
+                    document.getElementById("stat-merged").textContent = data.merged;
+                    document.getElementById("stat-errors").textContent = (data.errors || []).length;
+                    statsEl.style.display = "block";
+
+                    if (data.errors && data.errors.length) {
+                        console.warn("[IMPORT] Errors:", data.errors);
+                    }
+                }
+            } catch (e) {
+                showResult(box, "error", "❌ Network error: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>⬆</span> Upload &amp; Merge';
+            }
+        }
+
+        // ── Save export config ────────────────────────────────────────────────────────
+        async function saveExportConfig() {
+            const box = document.getElementById("export-config-result");
+            try {
+                const body = JSON.parse(document.getElementById("export-config-json").value);
+                const res = await fetch("/api/export/configs", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                });
+                const data = await res.json();
+                showResult(box, res.ok ? "success" : "error",
+                    res.ok ? "✅ Export config saved" : "❌ " + JSON.stringify(data));
+            } catch (e) {
+                showResult(box, "error", "❌ " + e.message);
+            }
+        }
+
+        // ── List export configs ───────────────────────────────────────────────────────
+        async function listExportConfigs() {
+            const box = document.getElementById("export-config-result");
+            try {
+                const res = await fetch("/api/export/configs");
+                const data = await res.json();
+                showResult(box, "info", JSON.stringify(data, null, 2));
+            } catch (e) {
+                showResult(box, "error", "❌ " + e.message);
+            }
+        }
+
+        // ── Save import config ────────────────────────────────────────────────────────
+        async function saveImportConfig() {
+            const box = document.getElementById("import-config-result");
+            try {
+                const body = JSON.parse(document.getElementById("import-config-json").value);
+                const res = await fetch("/api/import/configs", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                });
+                const data = await res.json();
+                showResult(box, res.ok ? "success" : "error",
+                    res.ok ? "✅ Import config saved" : "❌ " + JSON.stringify(data));
+            } catch (e) {
+                showResult(box, "error", "❌ " + e.message);
+            }
+        }
+
+        // ── List import configs ───────────────────────────────────────────────────────
+        async function listImportConfigs() {
+            const box = document.getElementById("import-config-result");
+            try {
+                const res = await fetch("/api/import/configs");
+                const data = await res.json();
+                showResult(box, "info", JSON.stringify(data, null, 2));
+            } catch (e) {
+                showResult(box, "error", "❌ " + e.message);
+            }
+        }
+
+        // ── Utility ───────────────────────────────────────────────────────────────────
+        function showResult(el, type, msg) {
+            el.className = "result-box visible result-" + type;
+            el.style.whiteSpace = "pre-wrap";
+            el.textContent = msg;
+        }
+    </script>
+</body>
+
+</html>
